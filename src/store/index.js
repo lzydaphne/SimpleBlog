@@ -50,6 +50,10 @@ export default new Vuex.Store({
   },
   // 提交 mutations 是改變 Vuex 中 store 的唯一方式。 mutations 非常類似於組件中的事件（event），
   //每個 mutation 都有一個字串的  事件類型(type) 和一個回調函數(handler)， handler 就是我們實際進行狀態更改的地方，並且他會接受 state 作為第一個參數。
+  /*Mutations 同步變動
+處理同步執行程序
+唯一可以改變 state 的方法，且單純只將結果直送並賦值給 state
+使用 commit 呼叫 mutation */
   mutations: {
     newBlogPost(state, payload) {
       state.blogHTML = payload;
@@ -85,6 +89,7 @@ export default new Vuex.Store({
     },
     setProfileAdmin(state, payload) {
       state.profileAdmin = payload;
+      console.log("---state.profileAdmin");
       console.log(state.profileAdmin);
     },
     setProfileInfo(state, doc) {
@@ -110,16 +115,29 @@ export default new Vuex.Store({
       state.profileUsername = payload;
     },
   },
+  /* 
+  Action 從後端api中抓取資料，傳遞(commit)給mutation
+  【提交 mutation 以改變 state，並且是唯一可以改變 state 的方法】
+先透過 getter 取得 state 資料，再到元件中引入 getter 並將資料渲染至畫面上
+元件內也可呼叫 action，接著依序執行循環流程，便能隨時更新資料狀態及存取應用
+
+Actions 異步行動
+- 處理非同步執行程序
+- 需透過提交 mutation 才能改變 state
+  */
   actions: {
     async getCurrentUser({ commit }, user) {
       const dataBase = await db
         .collection("users")
         .doc(firebase.auth().currentUser.uid);
       const dbResults = await dataBase.get();
-      commit("setProfileInfo", dbResults);
+      commit("setProfileInfo", dbResults); //提交一個稱為"setProfileInfo"的mutation，"dbResults" => payload
       commit("setProfileInitials");
       const token = await user.getIdTokenResult();
-      const admin = await token.claims.admin;
+      console.log(token);
+      const admin = await token.claims.user_id;
+      console.log("----");
+      console.log(admin);
       commit("setProfileAdmin", admin);
     },
     async getPost({ state }) {
@@ -140,6 +158,7 @@ export default new Vuex.Store({
       });
       state.postLoaded = true;
     },
+    //使用 dispatch 呼叫 action：回傳值為 promise
     async updatePost({ commit, dispatch }, payload) {
       commit("filterBlogPost", payload);
       await dispatch("getPost");
@@ -149,6 +168,15 @@ export default new Vuex.Store({
       await getPost.delete();
       commit("filterBlogPost", payload);
     },
+    //用來處理profile那邊的後端資料更新
+    //https://ithelp.ithome.com.tw/articles/10229704
+    /*
+    Collection是Document的集合,
+    Document可以連結Collection和儲存Field. 
+    Field的Type有 String, Number, Boolean等等
+    .doc即是collection所有的值. 
+    -> .doc(id)可以得到Collection中特定的值
+    */
     async updateUserSettings({ commit, state }) {
       const dataBase = await db.collection("users").doc(state.profileId);
       await dataBase.update({

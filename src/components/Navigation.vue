@@ -26,10 +26,50 @@
           <router-link class="link" :to="{ name: 'Home' }">Home</router-link>
           <router-link class="link" :to="{ name: 'Blogs' }">Blogs</router-link>
           <router-link class="link" to="#">Create Post</router-link>
-          <router-link class="link" :to="{ name: 'Login' }">
+          <router-link v-if="!user" class="link" :to="{ name: 'Login' }">
             Login/Register</router-link
           >
         </ul>
+
+        <div
+          v-if="user"
+          @click="toggleProfileMenu"
+          class="profile"
+          ref="profile"
+        >
+          <span>{{ this.$store.state.profileInitials }}</span>
+          <div v-show="profileMenu" class="profile-menu">
+            <div class="info">
+              <p class="initials">{{ this.$store.state.profileInitials }}</p>
+              <div class="right">
+                <p>
+                  {{ this.$store.state.profileFirstName }}
+                  {{ this.$store.state.profileLastName }}
+                </p>
+                <p>{{ this.$store.state.profileUsername }}</p>
+                <p>{{ this.$store.state.profileEmail }}</p>
+              </div>
+            </div>
+            <div class="options">
+              <div class="option">
+                <router-link class="option" :to="{ name: 'Profile' }">
+                  <userIcon class="icon" />
+                  <p>Profile</p>
+                </router-link>
+              </div>
+              <div v-if="admin" class="option">
+                <router-link class="option" :to="{ name: 'Admin' }">
+                  <adminIcon class="icon" />
+                  <p>Admin</p>
+                </router-link>
+              </div>
+              <div @click="signOut" class="option">
+                <signOutIcon class="icon" />
+                <p>Sign Out</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </nav>
     <!-- 建立元件 -->
@@ -42,7 +82,7 @@
         <router-link class="link" :to="{ name: 'Home' }">Home</router-link>
         <router-link class="link" :to="{ name: 'Blogs' }">Blogs</router-link>
         <router-link class="link" to="#">Create Post</router-link>
-        <router-link class="link" :to="{ name: 'Login' }">
+        <router-link v-if="!user" class="link" :to="{ name: 'Login' }">
           Login/Register</router-link
         >
       </ul>
@@ -52,14 +92,24 @@
 
 <script>
 import menuIcon from "../assets/Icons/bars-regular.svg";
+import userIcon from "../assets/Icons/user-alt-light.svg";
+import adminIcon from "../assets/Icons/user-crown-light.svg";
+import signOutIcon from "../assets/Icons/sign-out-alt-regular.svg";
+import firebase from "firebase/app";
+
+import "firebase/auth";
 
 export default {
   name: "navigation",
   components: {
     menuIcon,
+    userIcon,
+    adminIcon,
+    signOutIcon,
   },
   data() {
     return {
+      profileMenu: null,
       mobile: null,
       mobileNav: null,
       windowWidth: null,
@@ -84,6 +134,24 @@ export default {
 
     toggleMobileNav() {
       this.mobileNav = !this.mobileNav;
+    },
+    toggleProfileMenu(e) {
+      if (e.target === this.$refs.profile) {
+        this.profileMenu = !this.profileMenu;
+      }
+    },
+    signOut() {
+      firebase.auth().signOut();
+      window.location.reload();
+    },
+  },
+  //一旦有變更就會執行
+  computed: {
+    user() {
+      return this.$store.state.user;
+    },
+    admin() {
+      return this.$store.state.profileAdmin;
     },
   },
 };
@@ -258,23 +326,16 @@ header {
       color: #fff;
     }
   }
-  // ue.js 為 <transition> 預先定義了幾種場景，分別是元素進場 (顯示)
-  //v-enter-from: 定義元素在進場「之前」的樣式。
-  // v-enter-active: 定義元素在進場「過程」的樣式。
-  // v-enter-to: 定義元素在進場「結束時」的樣式。
-  //元素退場 (消失) ：
-  // v-leave-from: 定義元素在退場「之前」的樣式。
-  // v-leave-active: 定義元素在退場「過程」的樣式。
-  // v-leave-to: 定義元素在退場「結束時」的樣式。
+
   .mobile-nav-enter-active,
   .mobile-nav-leave-active {
     transition: all 1s ease;
   }
-  //	(進場) 漸變動畫執行時
+
   .mobile-nav-enter {
     transform: translateX(-250px);
   }
-  //定義元素在進場「結束時」的樣式
+
   .mobile-nav-enter-to {
     transform: translateX(0);
   }

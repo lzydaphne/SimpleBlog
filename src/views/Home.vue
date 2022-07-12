@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <BlogPost :post="welcomeScreen" />
+    <BlogPost v-if="!user" :post="welcomeScreen" />
     <!-- v-for -->
     <!-- https://book.vue.tw/CH1/1-6-conditions-and-flow-control.html#v-for-%E5%88%97%E8%A1%A8%E6%B8%B2%E6%9F%93 -->
     <!-- 加個「唯一的」 key 屬性作為識別，即可確保畫面的重新渲染： -->
@@ -22,7 +22,7 @@
         </div>
       </div>
     </div>
-    <div class="updates">
+    <div v-if="!user" class="updates">
       <div class="container">
         <h2>never miss a post. Register for your free account today!</h2>
         <router-link class="router-button" to="#">
@@ -50,7 +50,7 @@ export default {
       },
       sampleBlogPost: [
         {
-          title: "filler title",
+          title: "filler title99966",
           blogHTML: "fill post",
           blogCoverPhoto: "beautiful-stories",
         },
@@ -65,6 +65,9 @@ export default {
   computed: {
     sampleBlogCards() {
       return this.$store.state.sampleBlogCards;
+    },
+    user() {
+      return this.$store.state.user;
     },
   },
 };

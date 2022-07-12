@@ -1,5 +1,6 @@
 <template>
-  <div class="blog-wrapper no-user">
+  <!-- condional render -->
+  <div class="blog-wrapper " :class="{ 'no-user': !user }">
     <div class="blog-content">
       <div>
         <h2 v-if="post.welcomeScreen">{{ post.title }}</h2>
@@ -38,6 +39,11 @@ export default {
   props: ["post"], //post=> 外層資料在內層被引用的名字
   components: {
     Arrow,
+  },
+  computed: {
+    user() {
+      return this.$store.state.user;
+    },
   },
 };
 </script>

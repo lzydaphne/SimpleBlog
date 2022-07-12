@@ -12,6 +12,9 @@
 <script>
 import Navigation from "./components/Navigation.vue";
 import Footer from "./components/Footer.vue";
+import firebase from "firebase/app";
+import "firebase/auth";
+
 export default {
   name: "app",
   components: { Navigation, Footer },
@@ -21,7 +24,20 @@ export default {
     };
   },
   created() {
+    /*
+    以 store.commit 的方法來呼叫Mutations
+    */
+    //為了監控是否有auth state change
+    firebase.auth().onAuthStateChanged((user) => {
+      //執行updateUser ˊ這個mutation
+      this.$store.commit("updateUser", user);
+      if (user) {
+        //執行getCurrentUser 這個 action
+        this.$store.dispatch("getCurrentUser", user);
+      }
+    });
     this.checkRoute();
+    this.$store.dispatch("getPost");
   },
   mounted() {},
   methods: {

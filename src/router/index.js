@@ -5,6 +5,10 @@ import Blogs from "../views/Blogs.vue";
 import Login from "../views/Login.vue";
 import Register from "../views/Register.vue";
 import ForgotPassword from "../views/ForgotPassword.vue";
+import Profile from "../views/Profile.vue";
+import Admin from "../views/Admin.vue";
+import firebase from "firebase/app";
+import "firebase/auth";
 
 Vue.use(VueRouter);
 // 建立不同分頁連結
@@ -16,6 +20,7 @@ const routes = [
     // 變更頁面名稱
     meta: {
       title: "Home",
+      requiresAuth: false,
     },
   },
   {
@@ -24,6 +29,7 @@ const routes = [
     component: Blogs,
     meta: {
       title: "Blogs",
+      requiresAuth: false,
     },
   },
   {
@@ -32,6 +38,7 @@ const routes = [
     component: Login,
     meta: {
       title: "Login",
+      requiresAuth: false,
     },
   },
   {
@@ -40,6 +47,7 @@ const routes = [
     component: Register,
     meta: {
       title: "Register",
+      requiresAuth: false,
     },
   },
   {
@@ -48,6 +56,26 @@ const routes = [
     component: ForgotPassword,
     meta: {
       title: "Forgot Password",
+      requiresAuth: false,
+    },
+  },
+  {
+    path: "/profile",
+    name: "Profile",
+    component: Profile,
+    meta: {
+      title: "Profile",
+      requiresAuth: true,
+    },
+  },
+  {
+    path: "/admin",
+    name: "Admin",
+    component: Admin,
+    meta: {
+      title: "Admin",
+      requiresAuth: true,
+      requiresAdmin: true,
     },
   },
 ];
@@ -68,6 +96,29 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
   document.title = `${to.meta.title} | FireBlog`;
   next();
+});
+//route guard!
+//https://youtu.be/ISv22NNL-aE?t=22766
+router.beforeEach(async (to, from, next) => {
+  let user = firebase.auth().currentUser;
+  let admin = null;
+  if (user) {
+    let token = await user.getIdTokenResult();
+    admin = token.claims.admin;
+  }
+  if (to.matched.some((res) => res.meta.requiresAuth)) {
+    if (user) {
+      if (to.matched.some((res) => res.meta.requiresAdmin)) {
+        if (admin) {
+          return next();
+        }
+        return next({ name: "Home" });
+      }
+      return next();
+    }
+    return next({ name: "Home" });
+  }
+  return next();
 });
 
 export default router;
